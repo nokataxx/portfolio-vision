@@ -12,19 +12,14 @@ interface WorkerResult {
 
 export function useSimulation() {
   const workerRef = useRef<Worker | null>(null)
-  const {
-    holdings,
-    simulationParams,
-    portfolioStatistics,
-    setSimulationResult,
-    setIsSimulating,
-    setSimulationProgress,
-    setError,
-  } = usePortfolioStore()
+  const lastProgressRef = useRef(0)
 
   const runSimulation = useCallback(() => {
+    const state = usePortfolioStore.getState()
+    const { holdings, simulationParams, portfolioStatistics } = state
+
     if (!portfolioStatistics || holdings.length === 0) {
-      setError('銘柄を登録し、株価データを取得してから実行してください')
+      state.setError('銘柄を登録し、株価データを取得してから実行してください')
       return
     }
 
@@ -33,10 +28,11 @@ export function useSimulation() {
       workerRef.current.terminate()
     }
 
-    setIsSimulating(true)
-    setSimulationProgress(0)
-    setSimulationResult(null)
-    setError(null)
+    state.setIsSimulating(true)
+    state.setSimulationProgress(0)
+    state.setSimulationResult(null)
+    state.setError(null)
+    lastProgressRef.current = 0
 
     const worker = new Worker(
       new URL('../workers/simulation.worker.ts', import.meta.url),
@@ -56,20 +52,26 @@ export function useSimulation() {
     worker.onmessage = (e: MessageEvent<WorkerResult>) => {
       const data = e.data
       if (data.type === 'progress') {
-        setSimulationProgress(data.percent ?? 0)
+        // 進捗更新を5%刻みにスロットル
+        const percent = data.percent ?? 0
+        if (percent - lastProgressRef.current >= 5 || percent >= 100) {
+          lastProgressRef.current = percent
+          usePortfolioStore.getState().setSimulationProgress(percent)
+        }
       } else if (data.type === 'result' && data.result) {
-        // principalLossByStep を store の SimulationResult に含めるため拡張
-        setSimulationResult(data.result)
-        setIsSimulating(false)
-        setSimulationProgress(100)
+        const s = usePortfolioStore.getState()
+        s.setSimulationResult(data.result)
+        s.setIsSimulating(false)
+        s.setSimulationProgress(100)
         worker.terminate()
         workerRef.current = null
       }
     }
 
     worker.onerror = (err) => {
-      setError(`シミュレーション実行中にエラーが発生しました: ${err.message}`)
-      setIsSimulating(false)
+      const s = usePortfolioStore.getState()
+      s.setError(`シミュレーション実行中にエラーが発生しました: ${err.message}`)
+      s.setIsSimulating(false)
       worker.terminate()
       workerRef.current = null
     }
@@ -77,7 +79,7 @@ export function useSimulation() {
     // Phase 3: 相関考慮モデルの場合、コレスキー因子を計算して渡す
     let choleskyL: number[][] | undefined
     if (simulationParams.useCorrelation && holdings.length >= 2) {
-      const priceCache = usePortfolioStore.getState().priceCache
+      const priceCache = state.priceCache
       const returnSeries = holdings.map((h) => calcLogReturns(priceCache[h.code] ?? []))
       const TRADING_DAYS = 245
       const dailyCov = calcCovarianceMatrix(returnSeries)
@@ -93,23 +95,15 @@ export function useSimulation() {
       totalAcquisitionCost: portfolioStatistics.totalAcquisitionCost,
       choleskyL,
     })
-  }, [
-    holdings,
-    simulationParams,
-    portfolioStatistics,
-    setSimulationResult,
-    setIsSimulating,
-    setSimulationProgress,
-    setError,
-  ])
+  }, [])
 
   const cancelSimulation = useCallback(() => {
     if (workerRef.current) {
       workerRef.current.terminate()
       workerRef.current = null
-      setIsSimulating(false)
+      usePortfolioStore.getState().setIsSimulating(false)
     }
-  }, [setIsSimulating])
+  }, [])
 
   return { runSimulation, cancelSimulation }
 }
