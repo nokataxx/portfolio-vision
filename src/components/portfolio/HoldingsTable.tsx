@@ -122,8 +122,8 @@ export function HoldingsTable() {
           {holdings.map((h) => {
             const stats = getStockStats(h.code)
             const currentPrice = stats?.currentPrice ?? 0
-            const marketValue = currentPrice * h.shares
-            const cost = h.acquisitionPrice * h.shares
+            const marketValue = Math.round(currentPrice * h.shares)
+            const cost = Math.round(h.acquisitionPrice * h.shares)
             const pnlRate = cost > 0 ? (marketValue - cost) / cost : 0
 
             return (

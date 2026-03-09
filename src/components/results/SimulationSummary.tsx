@@ -1,6 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { usePortfolioStore } from '@/store/portfolioStore'
-import { Target, TrendingUp, TrendingDown, AlertTriangle, Sparkles } from 'lucide-react'
+import { Target, TrendingUp, TrendingDown, AlertTriangle, Sparkles, Trophy } from 'lucide-react'
 
 function formatManYen(value: number): string {
   return `${(value / 10000).toFixed(1)}万円`
@@ -46,20 +46,20 @@ export function SimulationSummary() {
       <h3 className="text-lg font-semibold">
         シミュレーション結果（{params.years}年後）
       </h3>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <SummaryItem
           label="期待評価額（中央値）"
           value={formatManYen(finalYear.median)}
           icon={<Target className="h-5 w-5 text-blue-500" />}
         />
         <SummaryItem
-          label="楽観シナリオ（90%ile）"
+          label="楽観シナリオ（75%ile）"
           value={formatManYen(finalYear.optimistic)}
           icon={<TrendingUp className="h-5 w-5 text-green-500" />}
           valueColor="text-green-600"
         />
         <SummaryItem
-          label="悲観シナリオ（10%ile）"
+          label="悲観シナリオ（25%ile）"
           value={formatManYen(finalYear.pessimistic)}
           icon={<TrendingDown className="h-5 w-5 text-red-500" />}
           valueColor="text-red-600"
@@ -81,6 +81,12 @@ export function SimulationSummary() {
           value={formatPercent(finalYear.doubleProbability)}
           icon={<Sparkles className="h-5 w-5 text-purple-500" />}
           valueColor="text-purple-600"
+        />
+        <SummaryItem
+          label="3倍達成確率"
+          value={formatPercent(finalYear.tripleProbability)}
+          icon={<Trophy className="h-5 w-5 text-yellow-500" />}
+          valueColor="text-yellow-600"
         />
       </div>
     </div>

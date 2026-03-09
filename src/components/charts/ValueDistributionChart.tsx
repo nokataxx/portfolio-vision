@@ -46,9 +46,10 @@ export function ValueDistributionChart() {
   if (!result || !stats) return null
 
   const costLine = stats.totalAcquisitionCost / 10000
-  const p10 = result.finalYear.pessimistic / 10000
-  const p50 = result.finalYear.median / 10000
-  const p90 = result.finalYear.optimistic / 10000
+  const finalPercentiles = result.percentiles[result.percentiles.length - 1]
+  const p10 = finalPercentiles.p10 / 10000
+  const p50 = finalPercentiles.p50 / 10000
+  const p90 = finalPercentiles.p90 / 10000
 
   return (
     <Card>
@@ -69,10 +70,20 @@ export function ValueDistributionChart() {
             />
             <YAxis tick={{ fontSize: 11 }} />
             <Tooltip
-              formatter={(value) => [`${value}回`, '頻度']}
-              labelFormatter={(label) => `${label}万円`}
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null
+                const count = payload[0]?.value
+                return (
+                  <div className="rounded-md border bg-background px-3 py-2 text-xs shadow-md">
+                    <p className="mb-1 font-medium">{label}万円</p>
+                    <p className="text-muted-foreground">
+                      頻度: <span className="font-medium text-foreground">{count}回</span>
+                    </p>
+                  </div>
+                )
+              }}
             />
-            <Bar dataKey="count" fill="var(--chart-1))" />
+            <Bar dataKey="count" fill="var(--chart-1)" />
             <ReferenceLine
               x={data.findIndex((d) => d.range / 10000 >= costLine)?.toString()}
               stroke="var(--destructive)"
@@ -81,7 +92,7 @@ export function ValueDistributionChart() {
             />
           </BarChart>
         </ResponsiveContainer>
-        <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
+        <div className="mt-2 flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
           <span>悲観（10%ile）: {p10.toFixed(0)}万円</span>
           <span>中央値: {p50.toFixed(0)}万円</span>
           <span>楽観（90%ile）: {p90.toFixed(0)}万円</span>

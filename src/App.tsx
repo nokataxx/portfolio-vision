@@ -24,11 +24,12 @@ function App() {
   const { fetchAllAndCalcStats } = useStockData()
 
   // 銘柄が変更されたら統計量を再計算
+  const holdingsKey = holdings.map((h) => `${h.code}:${h.shares}:${h.acquisitionPrice}`).join(',')
   useEffect(() => {
     if (holdings.length > 0) {
       fetchAllAndCalcStats()
     }
-  }, [holdings.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [holdingsKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="min-h-screen bg-background">
@@ -105,6 +106,8 @@ function App() {
               </CardContent>
             </Card>
 
+            <HistoricalPriceChart />
+
             {simulationResult && (
               <>
                 <SimulationSummary />
@@ -116,8 +119,6 @@ function App() {
                 <RiskContributionChart />
               </>
             )}
-
-            <HistoricalPriceChart />
 
             {holdings.length === 0 && (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">

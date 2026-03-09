@@ -58,7 +58,7 @@ export const usePortfolioStore = create<PortfolioState>()(
   persist(
     (set, get) => ({
       holdings: [],
-      dataPeriod: 5,
+      dataPeriod: 10,
       simulationParams: {
         years: 10,
         annualAddition: 0,

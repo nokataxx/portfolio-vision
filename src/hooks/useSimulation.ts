@@ -7,7 +7,7 @@ import type { SimulationResult } from '@/types/portfolio'
 interface WorkerResult {
   type: 'progress' | 'result'
   percent?: number
-  result?: SimulationResult & { principalLossByYear: number[] }
+  result?: SimulationResult & { principalLossByStep: number[] }
 }
 
 export function useSimulation() {
@@ -58,7 +58,7 @@ export function useSimulation() {
       if (data.type === 'progress') {
         setSimulationProgress(data.percent ?? 0)
       } else if (data.type === 'result' && data.result) {
-        // principalLossByYear を store の SimulationResult に含めるため拡張
+        // principalLossByStep を store の SimulationResult に含めるため拡張
         setSimulationResult(data.result)
         setIsSimulating(false)
         setSimulationProgress(100)

@@ -50,26 +50,28 @@ function generateCorrelatedRandoms(L: number[][], n: number): number[] {
 
 self.onmessage = (e: MessageEvent<WorkerInput>) => {
   const { stocks, years, numSimulations, annualAddition, totalAcquisitionCost, choleskyL } = e.data
-  const dt = 1
+  const stepsPerYear = 4 // 四半期ステップ
+  const dt = 1 / stepsPerYear
+  const totalSteps = years * stepsPerYear
   const useCorrelation = choleskyL != null && choleskyL.length === stocks.length
+  const quarterlyAddition = (annualAddition * 10000) / stepsPerYear
 
   const totalCurrentValue = stocks.reduce((s, st) => s + st.currentValue, 0)
   const weights = stocks.map((st) =>
     totalCurrentValue > 0 ? st.currentValue / totalCurrentValue : 1 / stocks.length,
   )
 
-  const yearlyValues: number[][] = Array.from({ length: years + 1 }, () => [])
+  const stepValues: number[][] = Array.from({ length: totalSteps + 1 }, () => [])
   const progressInterval = Math.max(1, Math.floor(numSimulations / 50))
 
   for (let sim = 0; sim < numSimulations; sim++) {
     let portfolioValue = totalCurrentValue
-    yearlyValues[0].push(portfolioValue)
+    stepValues[0].push(portfolioValue)
 
-    for (let year = 1; year <= years; year++) {
+    for (let step = 1; step <= totalSteps; step++) {
       let newValue = 0
 
       if (useCorrelation) {
-        // Phase 3: 相関考慮モデル — コレスキー分解で相関のある乱数を生成
         const correlatedZ = generateCorrelatedRandoms(choleskyL, stocks.length)
         for (let s = 0; s < stocks.length; s++) {
           const { annualReturn: mu, annualVolatility: sigma } = stocks[s]
@@ -79,7 +81,6 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
           newValue += stockValue * Math.exp(drift + diffusion)
         }
       } else {
-        // Phase 1: 独立モデル
         for (let s = 0; s < stocks.length; s++) {
           const { annualReturn: mu, annualVolatility: sigma } = stocks[s]
           const stockValue = portfolioValue * weights[s]
@@ -89,9 +90,9 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
         }
       }
 
-      newValue += annualAddition * 10000
+      newValue += quarterlyAddition
       portfolioValue = newValue
-      yearlyValues[year].push(portfolioValue)
+      stepValues[step].push(portfolioValue)
     }
 
     if (sim % progressInterval === 0) {
@@ -99,11 +100,11 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
     }
   }
 
-  // パーセンタイル計算
-  const percentiles = yearlyValues.map((values, year) => {
+  // パーセンタイル計算（四半期ごと）
+  const percentiles = stepValues.map((values, step) => {
     const sorted = [...values].sort((a, b) => a - b)
     return {
-      year,
+      year: step / stepsPerYear,
       p10: percentile(sorted, 10),
       p25: percentile(sorted, 25),
       p50: percentile(sorted, 50),
@@ -112,13 +113,14 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
     }
   })
 
-  // 最終年
-  const finalSorted = [...yearlyValues[years]].sort((a, b) => a - b)
+  // 最終ステップ
+  const finalSorted = [...stepValues[totalSteps]].sort((a, b) => a - b)
   const belowPrincipal = finalSorted.filter((v) => v < totalAcquisitionCost).length
   const aboveDouble = finalSorted.filter((v) => v >= totalAcquisitionCost * 2).length
+  const aboveTriple = finalSorted.filter((v) => v >= totalAcquisitionCost * 3).length
 
-  // 各年の元本割れ確率
-  const principalLossByYear = yearlyValues.map((values) => {
+  // 各四半期の元本割れ確率
+  const principalLossByStep = stepValues.map((values) => {
     const below = values.filter((v) => v < totalAcquisitionCost).length
     return below / numSimulations
   })
@@ -126,16 +128,17 @@ self.onmessage = (e: MessageEvent<WorkerInput>) => {
   self.postMessage({
     type: 'result',
     result: {
-      paths: yearlyValues,
+      paths: stepValues,
       percentiles,
       finalYear: {
         median: percentile(finalSorted, 50),
-        optimistic: percentile(finalSorted, 90),
-        pessimistic: percentile(finalSorted, 10),
+        optimistic: percentile(finalSorted, 75),
+        pessimistic: percentile(finalSorted, 25),
         principalLossProbability: belowPrincipal / numSimulations,
         doubleProbability: aboveDouble / numSimulations,
+        tripleProbability: aboveTriple / numSimulations,
       },
-      principalLossByYear,
+      principalLossByStep,
     },
   })
 }

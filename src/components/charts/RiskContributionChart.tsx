@@ -11,11 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { usePortfolioStore } from '@/store/portfolioStore'
 
 const COLORS = [
-  'var(--chart-1))',
-  'var(--chart-2))',
-  'var(--chart-3))',
-  'var(--chart-4))',
-  'var(--chart-5))',
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
   '#8884d8',
   '#82ca9d',
   '#ffc658',
@@ -63,7 +63,20 @@ export function RiskContributionChart() {
                 <Cell key={index} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => [`${value}%`, 'リスク寄与度']} />
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null
+                const d = payload[0]
+                return (
+                  <div className="rounded-md border bg-background px-3 py-2 text-xs shadow-md">
+                    <p className="mb-1 font-medium">{d?.name}</p>
+                    <p className="text-muted-foreground">
+                      リスク寄与度: <span className="font-medium text-foreground">{d?.value}%</span>
+                    </p>
+                  </div>
+                )
+              }}
+            />
             <Legend
               formatter={(value) => <span className="text-xs">{value}</span>}
             />

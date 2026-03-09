@@ -102,14 +102,17 @@ export function runMonteCarloSimulation(input: MonteCarloInput): SimulationResul
   // 最終年の統計
   const finalSorted = [...paths[years]].sort((a, b) => a - b)
   const median = percentile(finalSorted, 50)
-  const optimistic = percentile(finalSorted, 90)
-  const pessimistic = percentile(finalSorted, 10)
+  const optimistic = percentile(finalSorted, 75)
+  const pessimistic = percentile(finalSorted, 25)
 
   const belowPrincipal = finalSorted.filter((v) => v < totalAcquisitionCost).length
   const principalLossProbability = belowPrincipal / numSimulations
 
   const aboveDouble = finalSorted.filter((v) => v >= totalAcquisitionCost * 2).length
   const doubleProbability = aboveDouble / numSimulations
+
+  const aboveTriple = finalSorted.filter((v) => v >= totalAcquisitionCost * 3).length
+  const tripleProbability = aboveTriple / numSimulations
 
   onProgress?.(100)
 
@@ -122,6 +125,7 @@ export function runMonteCarloSimulation(input: MonteCarloInput): SimulationResul
       pessimistic,
       principalLossProbability,
       doubleProbability,
+      tripleProbability,
     },
   }
 }

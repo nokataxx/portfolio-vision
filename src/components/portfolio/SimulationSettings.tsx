@@ -13,9 +13,10 @@ export function SimulationSettings() {
   const simulationProgress = usePortfolioStore((s) => s.simulationProgress)
   const holdings = usePortfolioStore((s) => s.holdings)
   const portfolioStatistics = usePortfolioStore((s) => s.portfolioStatistics)
+  const isFetchingData = usePortfolioStore((s) => s.isFetchingData)
   const { runSimulation, cancelSimulation } = useSimulation()
 
-  const canRun = holdings.length > 0 && portfolioStatistics !== null
+  const canRun = holdings.length > 0 && portfolioStatistics !== null && !isFetchingData
 
   return (
     <div className="space-y-3">
@@ -58,19 +59,19 @@ export function SimulationSettings() {
         </div>
       )}
 
+      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+        {isSimulating && (
+          <div
+            className="h-full bg-primary transition-all duration-200"
+            style={{ width: `${simulationProgress}%` }}
+          />
+        )}
+      </div>
       {isSimulating ? (
-        <div className="space-y-2">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full bg-primary transition-all duration-200"
-              style={{ width: `${simulationProgress}%` }}
-            />
-          </div>
-          <Button variant="outline" className="w-full" onClick={cancelSimulation}>
-            <Square className="mr-1.5 h-4 w-4" />
-            中止
-          </Button>
-        </div>
+        <Button variant="outline" className="w-full" onClick={cancelSimulation}>
+          <Square className="mr-1.5 h-4 w-4" />
+          中止
+        </Button>
       ) : (
         <Button className="w-full" onClick={runSimulation} disabled={!canRun}>
           {!canRun ? (

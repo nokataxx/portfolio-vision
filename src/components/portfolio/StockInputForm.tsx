@@ -94,30 +94,24 @@ export function StockInputForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="stock-code">証券コード</Label>
-          <Input
-            id="stock-code"
-            placeholder="例: 7203"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            onBlur={handleCodeBlur}
-            maxLength={4}
-            pattern="\d{4}"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label>銘柄名</Label>
-          <div className="flex h-9 items-center rounded-md border border-input bg-muted/50 px-3 text-sm">
-            {isLooking ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : (
-              <span className={stockName ? '' : 'text-muted-foreground'}>
-                {stockName || '自動取得'}
-              </span>
-            )}
-          </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="stock-code">証券コード</Label>
+        <Input
+          id="stock-code"
+          placeholder="例: 7203"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          onBlur={handleCodeBlur}
+          maxLength={4}
+          pattern="\d{4}"
+          className="w-1/2"
+        />
+        <div className="truncate text-sm text-muted-foreground">
+          {isLooking ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            stockName || '\u00A0'
+          )}
         </div>
       </div>
 

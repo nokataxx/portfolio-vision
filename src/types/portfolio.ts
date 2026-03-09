@@ -82,9 +82,10 @@ export interface SimulationResult {
     pessimistic: number
     principalLossProbability: number
     doubleProbability: number
+    tripleProbability: number
   }
-  /** 各年の元本割れ確率 */
-  principalLossByYear?: number[]
+  /** 各ステップの元本割れ確率（四半期ごと） */
+  principalLossByStep?: number[]
 }
 
 /** 株価データ取得プロバイダーのインターフェース */
