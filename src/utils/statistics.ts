@@ -207,13 +207,21 @@ export function calcPortfolioStatistics(
   }
   const volatility = Math.sqrt(Math.max(0, portfolioVariance))
 
-  // リスク寄与度
-  const riskContributions = holdings.map((h, i) => {
-    let marginalContrib = 0
+  // 限界リスク寄与 (MCR) とリスク寄与度
+  // MCRi = (Σw)i / σp = Σ_j(cov_ij * w_j) / σp
+  const marginalRiskContributions = holdings.map((h, i) => {
+    let sigmaW = 0
     for (let j = 0; j < weights.length; j++) {
-      marginalContrib += weights[j] * (annCovMatrix[i]?.[j] ?? 0)
+      sigmaW += (annCovMatrix[i]?.[j] ?? 0) * weights[j]
     }
-    const contrib = volatility > 0 ? (weights[i] * marginalContrib) / portfolioVariance : 0
+    const mcr = volatility > 0 ? sigmaW / volatility : 0
+    return { code: h.code, mcr }
+  })
+
+  const riskContributions = holdings.map((h, i) => {
+    const contrib = volatility > 0
+      ? (weights[i] * marginalRiskContributions[i].mcr) / volatility
+      : 0
     return { code: h.code, contribution: contrib }
   })
 
@@ -238,6 +246,7 @@ export function calcPortfolioStatistics(
     maxDrawdown: portfolioMaxDd,
     correlationMatrix,
     riskContributions,
+    marginalRiskContributions,
     stockStatistics: stockStats,
   }
 }

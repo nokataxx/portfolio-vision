@@ -47,6 +47,7 @@ export interface PortfolioStatistics {
   maxDrawdown: number
   correlationMatrix: number[][]
   riskContributions: { code: string; contribution: number }[]
+  marginalRiskContributions: { code: string; mcr: number }[]
   stockStatistics: StockStatistics[]
 }
 

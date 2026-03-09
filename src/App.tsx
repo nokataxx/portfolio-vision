@@ -11,6 +11,9 @@ import { ValueDistributionChart } from '@/components/charts/ValueDistributionCha
 import { ValueProjectionChart } from '@/components/charts/ValueProjectionChart'
 import { PrincipalLossChart } from '@/components/charts/PrincipalLossChart'
 import { RiskContributionChart } from '@/components/charts/RiskContributionChart'
+import { CorrelationMatrixChart } from '@/components/charts/CorrelationMatrixChart'
+import { MarginalRiskChart } from '@/components/charts/MarginalRiskChart'
+import { LeaveOneOutTable } from '@/components/results/LeaveOneOutTable'
 import { HistoricalPriceChart } from '@/components/charts/HistoricalPriceChart'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import { useStockData } from '@/hooks/useStockData'
@@ -108,15 +111,22 @@ function App() {
 
             <HistoricalPriceChart />
 
+            {/* ポートフォリオ分析（過去データベース） */}
+            <CorrelationMatrixChart />
+            <RiskContributionChart />
+            <MarginalRiskChart />
+            <LeaveOneOutTable />
+
+            {/* シミュレーション結果（将来予測） */}
             {simulationResult && (
               <>
+                <Separator />
                 <SimulationSummary />
                 <div className="grid gap-6 xl:grid-cols-2">
                   <ValueDistributionChart />
                   <ValueProjectionChart />
                 </div>
                 <PrincipalLossChart />
-                <RiskContributionChart />
               </>
             )}
 
