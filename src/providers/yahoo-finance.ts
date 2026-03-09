@@ -1,16 +1,25 @@
 import type { PriceData, StockDataProvider, StockInfo } from '@/types/portfolio'
 
 /**
- * Yahoo Finance API プロバイダー
- * 日本株の株価データを取得する。
- * CORS回避のため Vite dev server のプロキシを経由する。
+ * Stooq プロバイダー
+ * 日本株の株価データを Stooq から取得する。
+ * 認証不要・無料の CSV API を使用。
+ * CORS 回避のため Vite dev server のプロキシを経由する。
  */
 export class YahooFinanceProvider implements StockDataProvider {
-  private baseUrl = '/api/yahoo-finance'
+  private baseUrl = '/api/stooq'
 
-  /** 東証銘柄コードを Yahoo Finance のティッカーに変換 */
-  private toTicker(code: string): string {
-    return `${code}.T`
+  /** 東証銘柄コードを Stooq のシンボルに変換 */
+  private toSymbol(code: string): string {
+    return `${code}.jp`
+  }
+
+  /** Date を yyyymmdd 形式に変換 */
+  private formatDate(d: Date): string {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}${m}${day}`
   }
 
   async fetchHistoricalPrices(
@@ -18,11 +27,11 @@ export class YahooFinanceProvider implements StockDataProvider {
     from: Date,
     to: Date,
   ): Promise<PriceData[]> {
-    const ticker = this.toTicker(code)
-    const period1 = Math.floor(from.getTime() / 1000)
-    const period2 = Math.floor(to.getTime() / 1000)
+    const symbol = this.toSymbol(code)
+    const d1 = this.formatDate(from)
+    const d2 = this.formatDate(to)
 
-    const url = `${this.baseUrl}/v8/finance/chart/${ticker}?period1=${period1}&period2=${period2}&interval=1d`
+    const url = `${this.baseUrl}/q/d/l/?s=${symbol}&d1=${d1}&d2=${d2}&i=d`
 
     const response = await fetch(url)
     if (!response.ok) {
@@ -31,34 +40,45 @@ export class YahooFinanceProvider implements StockDataProvider {
       )
     }
 
-    const data = await response.json()
-    const result = data.chart?.result?.[0]
-    if (!result) {
+    const text = await response.text()
+    const lines = text.trim().split('\n')
+
+    if (lines.length < 2) {
       throw new Error(`銘柄コード ${code} のデータが見つかりません`)
     }
 
-    const timestamps: number[] = result.timestamp ?? []
-    const quotes = result.indicators?.quote?.[0] ?? {}
-    const adjClose: number[] =
-      result.indicators?.adjclose?.[0]?.adjclose ?? []
+    // ヘッダー行をスキップ: Date,Open,High,Low,Close,Volume
+    const prices: PriceData[] = []
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',')
+      if (cols.length < 6) continue
 
-    return timestamps
-      .map((ts, i) => ({
-        date: new Date(ts * 1000).toISOString().split('T')[0],
-        open: quotes.open?.[i] ?? 0,
-        high: quotes.high?.[i] ?? 0,
-        low: quotes.low?.[i] ?? 0,
-        close: quotes.close?.[i] ?? 0,
-        volume: quotes.volume?.[i] ?? 0,
-        adjClose: adjClose[i] ?? quotes.close?.[i] ?? 0,
-      }))
-      .filter((d) => d.close > 0)
+      const close = parseFloat(cols[4])
+      if (close <= 0 || isNaN(close)) continue
+
+      prices.push({
+        date: cols[0],
+        open: parseFloat(cols[1]),
+        high: parseFloat(cols[2]),
+        low: parseFloat(cols[3]),
+        close,
+        volume: parseInt(cols[5], 10) || 0,
+        adjClose: close, // Stooq の Close は調整済み
+      })
+    }
+
+    if (prices.length === 0) {
+      throw new Error(`銘柄コード ${code} のデータが見つかりません`)
+    }
+
+    return prices
   }
 
   async fetchStockInfo(code: string): Promise<StockInfo> {
-    const ticker = this.toTicker(code)
-    const url = `${this.baseUrl}/v8/finance/chart/${ticker}?range=1d&interval=1d`
+    const symbol = this.toSymbol(code)
 
+    // Stooq の HTML ページから銘柄名を取得
+    const url = `${this.baseUrl}/q/?s=${symbol}`
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(
@@ -66,16 +86,18 @@ export class YahooFinanceProvider implements StockDataProvider {
       )
     }
 
-    const data = await response.json()
-    const meta = data.chart?.result?.[0]?.meta
-    if (!meta) {
+    const html = await response.text()
+
+    // <title>7203.JP (+0.98%) - Toyota Motor Co. - Stooq</title>
+    const titleMatch = html.match(/<title>[^<]*-\s*(.+?)\s*-\s*Stooq<\/title>/)
+    const name = titleMatch?.[1]?.trim() || code
+
+    // タイトルに銘柄名が含まれていない場合（無効なコード）
+    if (html.includes('Unknown symbol') || html.includes('No data')) {
       throw new Error(`銘柄コード ${code} が見つかりません`)
     }
 
-    return {
-      code,
-      name: meta.shortName || meta.longName || meta.symbol || code,
-    }
+    return { code, name }
   }
 }
 

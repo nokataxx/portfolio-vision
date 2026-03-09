@@ -12,10 +12,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api/yahoo-finance": {
-        target: "https://query1.finance.yahoo.com",
+      "/api/stooq": {
+        target: "https://stooq.com",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/yahoo-finance/, ""),
+        rewrite: (p) => p.replace(/^\/api\/stooq/, ""),
       },
     },
   },
