@@ -34,9 +34,9 @@ export function CorrelationMatrixChart() {
   const portfolioStatistics = usePortfolioStore((s) => s.portfolioStatistics)
   const holdings = usePortfolioStore((s) => s.holdings)
 
-  const { labels, matrix, volatilities } = useMemo(() => {
+  const { labels, matrix, volatilities, weightedAvgCorrelation, diversificationRatio } = useMemo(() => {
     if (!portfolioStatistics?.correlationMatrix || holdings.length < 2) {
-      return { labels: [], matrix: [], volatilities: [] }
+      return { labels: [], matrix: [], volatilities: [], weightedAvgCorrelation: 0, diversificationRatio: 0 }
     }
 
     const labels = holdings.map((h) => h.code)
@@ -45,7 +45,37 @@ export function CorrelationMatrixChart() {
       (s) => s.annualVolatility,
     )
 
-    return { labels, matrix, volatilities }
+    // ウェイト計算
+    const marketValues = holdings.map(
+      (h, i) => h.shares * portfolioStatistics.stockStatistics[i].currentPrice,
+    )
+    const totalValue = marketValues.reduce((s, v) => s + v, 0)
+    const weights = marketValues.map((v) => (totalValue > 0 ? v / totalValue : 0))
+
+    // 加重平均相関
+    const n = labels.length
+    let weightedCorrSum = 0
+    let weightSum = 0
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const w = weights[i] * weights[j]
+        weightedCorrSum += w * matrix[i][j]
+        weightSum += w
+      }
+    }
+    const weightedAvgCorrelation = weightSum > 0 ? weightedCorrSum / weightSum : 0
+
+    // 分散比率 = 個別ボラティリティの加重平均 / ポートフォリオ全体のボラティリティ
+    const weightedVolSum = weights.reduce(
+      (sum, w, i) => sum + w * volatilities[i],
+      0,
+    )
+    const diversificationRatio =
+      portfolioStatistics.volatility > 0
+        ? weightedVolSum / portfolioStatistics.volatility
+        : 1
+
+    return { labels, matrix, volatilities, weightedAvgCorrelation, diversificationRatio }
   }, [portfolioStatistics, holdings])
 
   if (labels.length === 0) return null
@@ -178,6 +208,23 @@ export function CorrelationMatrixChart() {
         <p className="mt-2 text-center text-[11px] text-muted-foreground">
           対角線はボラティリティ（年率）を表示
         </p>
+        <div className="mt-2 flex justify-center gap-6 text-sm text-muted-foreground">
+          <div>
+            <span className="mr-1">加重平均相関:</span>
+            <span className="font-semibold text-foreground">
+              {weightedAvgCorrelation.toFixed(2)}
+            </span>
+          </div>
+          <div>
+            <span className="mr-1">分散比率:</span>
+            <span className="font-semibold text-foreground">
+              {diversificationRatio.toFixed(2)}
+            </span>
+            <span className="ml-1 text-[10px]">
+              ({diversificationRatio >= 1.5 ? '高い分散効果' : diversificationRatio >= 1.2 ? 'やや分散効果あり' : '分散効果が限定的'})
+            </span>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

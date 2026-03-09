@@ -149,7 +149,6 @@ function App() {
       {/* フッター */}
       <footer className="border-t bg-card">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-          <Separator className="mb-4" />
           <p className="text-xs text-muted-foreground">
             ※ 本ツールの計算結果はあくまで参考値であり、将来の株価・運用成果を保証するものではありません。投資判断はご自身の責任で行ってください。
           </p>
