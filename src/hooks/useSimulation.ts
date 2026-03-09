@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import { calcLogReturns, calcCovarianceMatrix, choleskyDecompose } from '@/utils/statistics'
+import { NUM_SIMULATIONS } from '@/types/portfolio'
 import type { SimulationResult } from '@/types/portfolio'
 
 interface WorkerResult {
@@ -87,7 +88,7 @@ export function useSimulation() {
     worker.postMessage({
       stocks,
       years: simulationParams.years,
-      numSimulations: simulationParams.numSimulations,
+      numSimulations: NUM_SIMULATIONS,
       annualAddition: simulationParams.annualAddition,
       totalAcquisitionCost: portfolioStatistics.totalAcquisitionCost,
       choleskyL,

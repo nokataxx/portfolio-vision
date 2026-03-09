@@ -50,10 +50,12 @@ export interface PortfolioStatistics {
   stockStatistics: StockStatistics[]
 }
 
+/** シミュレーション試行回数（内部固定） */
+export const NUM_SIMULATIONS = 10000
+
 /** シミュレーションパラメータ */
 export interface SimulationParams {
   years: number
-  numSimulations: number
   annualAddition: number
   riskFreeRate: number
   /** 相関考慮モデルを使用するか（Phase 3） */

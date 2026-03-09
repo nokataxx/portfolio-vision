@@ -32,22 +32,7 @@ export function SimulationSettings() {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="sim-count">試行回数</Label>
-          <Input
-            id="sim-count"
-            type="number"
-            value={simulationParams.numSimulations}
-            onChange={(e) =>
-              setSimulationParams({ numSimulations: parseInt(e.target.value) || 10000 })
-            }
-            min={1000}
-            max={100000}
-            step={1000}
-          />
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="sim-addition">年次追加投資額（万円）</Label>
+          <Label htmlFor="sim-addition">追加投資額（万円/年）</Label>
         <Input
           id="sim-addition"
           type="number"
@@ -55,8 +40,9 @@ export function SimulationSettings() {
           onChange={(e) =>
             setSimulationParams({ annualAddition: parseFloat(e.target.value) || 0 })
           }
-          min={0}
-        />
+            min={0}
+          />
+        </div>
       </div>
 
       {holdings.length >= 2 && (

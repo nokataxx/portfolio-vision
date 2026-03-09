@@ -1,3 +1,4 @@
+import { NUM_SIMULATIONS } from '@/types/portfolio'
 import type { SimulationResult } from '@/types/portfolio'
 
 /** Box-Muller変換で標準正規分布の乱数を生成 */
@@ -29,7 +30,6 @@ export interface StockParam {
 export interface MonteCarloInput {
   stocks: StockParam[]
   years: number
-  numSimulations: number
   annualAddition: number
   totalAcquisitionCost: number
   onProgress?: (percent: number) => void
@@ -40,7 +40,8 @@ export interface MonteCarloInput {
  * GBM（幾何ブラウン運動）: S(t+dt) = S(t) * exp((μ - σ²/2)*dt + σ*√dt*Z)
  */
 export function runMonteCarloSimulation(input: MonteCarloInput): SimulationResult {
-  const { stocks, years, numSimulations, annualAddition, totalAcquisitionCost, onProgress } = input
+  const { stocks, years, annualAddition, totalAcquisitionCost, onProgress } = input
+  const numSimulations = NUM_SIMULATIONS
   const dt = 1 // 年単位ステップ
 
   // paths[year][simIndex] = ポートフォリオ評価額

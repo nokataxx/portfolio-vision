@@ -61,7 +61,6 @@ export const usePortfolioStore = create<PortfolioState>()(
       dataPeriod: 5,
       simulationParams: {
         years: 10,
-        numSimulations: 10000,
         annualAddition: 0,
         riskFreeRate: 0.001,
         useCorrelation: true,
