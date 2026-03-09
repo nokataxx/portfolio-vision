@@ -55,6 +55,8 @@ export interface SimulationParams {
   numSimulations: number
   annualAddition: number
   riskFreeRate: number
+  /** 相関考慮モデルを使用するか（Phase 3） */
+  useCorrelation: boolean
 }
 
 /** シミュレーション結果 */

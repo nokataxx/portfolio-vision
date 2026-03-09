@@ -10,6 +10,7 @@ import { SimulationSummary } from '@/components/results/SimulationSummary'
 import { ValueDistributionChart } from '@/components/charts/ValueDistributionChart'
 import { ValueProjectionChart } from '@/components/charts/ValueProjectionChart'
 import { PrincipalLossChart } from '@/components/charts/PrincipalLossChart'
+import { RiskContributionChart } from '@/components/charts/RiskContributionChart'
 import { HistoricalPriceChart } from '@/components/charts/HistoricalPriceChart'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import { useStockData } from '@/hooks/useStockData'
@@ -34,7 +35,7 @@ function App() {
       {/* ヘッダー */}
       <header className="border-b bg-card">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
-          <h1 className="text-xl font-bold tracking-tight">
+          <h1 className="text-2xl font-bold tracking-tight">
             Portfolio Vision
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -113,6 +114,7 @@ function App() {
                   <ValueProjectionChart />
                 </div>
                 <PrincipalLossChart />
+                <RiskContributionChart />
               </>
             )}
 

@@ -1,5 +1,6 @@
 import { useCallback, useRef } from 'react'
 import { usePortfolioStore } from '@/store/portfolioStore'
+import { calcLogReturns, calcCovarianceMatrix, choleskyDecompose } from '@/utils/statistics'
 import type { SimulationResult } from '@/types/portfolio'
 
 interface WorkerResult {
@@ -72,12 +73,24 @@ export function useSimulation() {
       workerRef.current = null
     }
 
+    // Phase 3: 相関考慮モデルの場合、コレスキー因子を計算して渡す
+    let choleskyL: number[][] | undefined
+    if (simulationParams.useCorrelation && holdings.length >= 2) {
+      const priceCache = usePortfolioStore.getState().priceCache
+      const returnSeries = holdings.map((h) => calcLogReturns(priceCache[h.code] ?? []))
+      const TRADING_DAYS = 245
+      const dailyCov = calcCovarianceMatrix(returnSeries)
+      const annCov = dailyCov.map((row) => row.map((v) => v * TRADING_DAYS))
+      choleskyL = choleskyDecompose(annCov)
+    }
+
     worker.postMessage({
       stocks,
       years: simulationParams.years,
       numSimulations: simulationParams.numSimulations,
       annualAddition: simulationParams.annualAddition,
       totalAcquisitionCost: portfolioStatistics.totalAcquisitionCost,
+      choleskyL,
     })
   }, [
     holdings,

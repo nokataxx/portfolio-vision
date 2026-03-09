@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import { useSimulation } from '@/hooks/useSimulation'
 import { Play, Square, Loader2 } from 'lucide-react'
@@ -57,6 +58,19 @@ export function SimulationSettings() {
           min={0}
         />
       </div>
+
+      {holdings.length >= 2 && (
+        <div className="flex items-center justify-between">
+          <Label htmlFor="use-correlation" className="text-sm">
+            銘柄間の相関を考慮
+          </Label>
+          <Switch
+            id="use-correlation"
+            checked={simulationParams.useCorrelation}
+            onCheckedChange={(checked) => setSimulationParams({ useCorrelation: checked })}
+          />
+        </div>
+      )}
 
       {isSimulating ? (
         <div className="space-y-2">

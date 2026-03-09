@@ -131,6 +131,32 @@ export function calcCovarianceMatrix(returnSeries: number[][]): number[][] {
   return matrix
 }
 
+/**
+ * コレスキー分解: 対称正定値行列 A を下三角行列 L に分解する (A = L * L')
+ * 相関のある多変量正規乱数の生成に使用
+ */
+export function choleskyDecompose(matrix: number[][]): number[][] {
+  const n = matrix.length
+  const L: number[][] = Array.from({ length: n }, () => new Array(n).fill(0))
+
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j <= i; j++) {
+      let sum = 0
+      for (let k = 0; k < j; k++) {
+        sum += L[i][k] * L[j][k]
+      }
+      if (i === j) {
+        const diag = matrix[i][i] - sum
+        // 数値的に負になる可能性があるため0でクランプ
+        L[i][j] = Math.sqrt(Math.max(0, diag))
+      } else {
+        L[i][j] = L[j][j] > 0 ? (matrix[i][j] - sum) / L[j][j] : 0
+      }
+    }
+  }
+  return L
+}
+
 /** ポートフォリオ全体の統計量を計算 */
 export function calcPortfolioStatistics(
   holdings: StockHolding[],

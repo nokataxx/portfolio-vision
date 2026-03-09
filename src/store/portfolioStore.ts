@@ -64,6 +64,7 @@ export const usePortfolioStore = create<PortfolioState>()(
         numSimulations: 10000,
         annualAddition: 0,
         riskFreeRate: 0.001,
+        useCorrelation: true,
       },
       priceCache: {},
       portfolioStatistics: null,
