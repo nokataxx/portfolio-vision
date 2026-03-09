@@ -13,6 +13,7 @@ export interface PriceData {
 export interface StockInfo {
   code: string
   name: string
+  currentPrice?: number
 }
 
 /** ポートフォリオの1銘柄 */

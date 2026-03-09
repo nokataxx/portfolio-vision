@@ -77,8 +77,9 @@ export class YahooFinanceProvider implements StockDataProvider {
   async fetchStockInfo(code: string): Promise<StockInfo> {
     const symbol = this.toSymbol(code)
 
-    // Stooq の HTML ページから銘柄名を取得
-    const url = `${this.baseUrl}/q/?s=${symbol}`
+    // Stooq の CSV API で銘柄名と最新株価を同時取得
+    // f=sd2t2ohlcvn : Symbol, Date, Time, Open, High, Low, Close, Volume, Name
+    const url = `${this.baseUrl}/q/l/?s=${symbol}&f=sd2t2ohlcvn&h&e=csv`
     const response = await fetch(url)
     if (!response.ok) {
       throw new Error(
@@ -86,18 +87,23 @@ export class YahooFinanceProvider implements StockDataProvider {
       )
     }
 
-    const html = await response.text()
+    const text = await response.text()
+    const lines = text.trim().split('\n')
 
-    // <title>7203.JP (+0.98%) - Toyota Motor Co. - Stooq</title>
-    const titleMatch = html.match(/<title>[^<]*-\s*(.+?)\s*-\s*Stooq<\/title>/)
-    const name = titleMatch?.[1]?.trim() || code
-
-    // タイトルに銘柄名が含まれていない場合（無効なコード）
-    if (html.includes('Unknown symbol') || html.includes('No data')) {
+    if (lines.length < 2) {
       throw new Error(`銘柄コード ${code} が見つかりません`)
     }
 
-    return { code, name }
+    // ヘッダー: Symbol,Date,Time,Open,High,Low,Close,Volume,Name
+    const cols = lines[1].split(',')
+    const close = parseFloat(cols[6])
+    const name = cols.slice(8).join(',').trim() || code
+
+    if (!close || isNaN(close) || name === 'No data') {
+      throw new Error(`銘柄コード ${code} が見つかりません`)
+    }
+
+    return { code, name, currentPrice: close }
   }
 }
 

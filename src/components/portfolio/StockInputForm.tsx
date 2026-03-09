@@ -31,6 +31,9 @@ export function StockInputForm() {
     try {
       const info = await fetchStockInfo(trimmed)
       setStockName(info.name)
+      if (info.currentPrice && !acquisitionPrice) {
+        setAcquisitionPrice(String(info.currentPrice))
+      }
     } catch {
       setLookupError('銘柄情報を取得できませんでした')
       setStockName('')
@@ -54,11 +57,15 @@ export function StockInputForm() {
     if (!priceNum || priceNum <= 0) return
 
     let name = stockName
+    let finalPrice = priceNum
     if (!name) {
       setIsLooking(true)
       try {
         const info = await fetchStockInfo(trimmedCode)
         name = info.name
+        if (info.currentPrice && !priceNum) {
+          finalPrice = info.currentPrice
+        }
       } catch {
         setLookupError('銘柄情報を取得できませんでした')
         setIsLooking(false)
@@ -71,7 +78,7 @@ export function StockInputForm() {
       code: trimmedCode,
       name,
       shares: sharesNum,
-      acquisitionPrice: priceNum,
+      acquisitionPrice: finalPrice,
     })
 
     // 株価データをバックグラウンドで取得
