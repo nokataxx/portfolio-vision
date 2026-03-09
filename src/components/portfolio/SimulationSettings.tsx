@@ -1,0 +1,86 @@
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { usePortfolioStore } from '@/store/portfolioStore'
+import { useSimulation } from '@/hooks/useSimulation'
+import { Play, Square, Loader2 } from 'lucide-react'
+
+export function SimulationSettings() {
+  const simulationParams = usePortfolioStore((s) => s.simulationParams)
+  const setSimulationParams = usePortfolioStore((s) => s.setSimulationParams)
+  const isSimulating = usePortfolioStore((s) => s.isSimulating)
+  const simulationProgress = usePortfolioStore((s) => s.simulationProgress)
+  const holdings = usePortfolioStore((s) => s.holdings)
+  const portfolioStatistics = usePortfolioStore((s) => s.portfolioStatistics)
+  const { runSimulation, cancelSimulation } = useSimulation()
+
+  const canRun = holdings.length > 0 && portfolioStatistics !== null
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="sim-years">期間（年）</Label>
+          <Input
+            id="sim-years"
+            type="number"
+            value={simulationParams.years}
+            onChange={(e) => setSimulationParams({ years: parseInt(e.target.value) || 10 })}
+            min={1}
+            max={30}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="sim-count">試行回数</Label>
+          <Input
+            id="sim-count"
+            type="number"
+            value={simulationParams.numSimulations}
+            onChange={(e) =>
+              setSimulationParams({ numSimulations: parseInt(e.target.value) || 10000 })
+            }
+            min={1000}
+            max={100000}
+            step={1000}
+          />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="sim-addition">年次追加投資額（万円）</Label>
+        <Input
+          id="sim-addition"
+          type="number"
+          value={simulationParams.annualAddition}
+          onChange={(e) =>
+            setSimulationParams({ annualAddition: parseFloat(e.target.value) || 0 })
+          }
+          min={0}
+        />
+      </div>
+
+      {isSimulating ? (
+        <div className="space-y-2">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full bg-primary transition-all duration-200"
+              style={{ width: `${simulationProgress}%` }}
+            />
+          </div>
+          <Button variant="outline" className="w-full" onClick={cancelSimulation}>
+            <Square className="mr-1.5 h-4 w-4" />
+            中止
+          </Button>
+        </div>
+      ) : (
+        <Button className="w-full" onClick={runSimulation} disabled={!canRun}>
+          {!canRun ? (
+            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="mr-1.5 h-4 w-4" />
+          )}
+          シミュレーション実行
+        </Button>
+      )}
+    </div>
+  )
+}

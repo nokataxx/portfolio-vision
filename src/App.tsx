@@ -1,34 +1,149 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { StockInputForm } from '@/components/portfolio/StockInputForm'
+import { HoldingsTable } from '@/components/portfolio/HoldingsTable'
+import { SimulationSettings } from '@/components/portfolio/SimulationSettings'
+import { PortfolioSummary } from '@/components/results/PortfolioSummary'
+import { SimulationSummary } from '@/components/results/SimulationSummary'
+import { ValueDistributionChart } from '@/components/charts/ValueDistributionChart'
+import { ValueProjectionChart } from '@/components/charts/ValueProjectionChart'
+import { PrincipalLossChart } from '@/components/charts/PrincipalLossChart'
+import { HistoricalPriceChart } from '@/components/charts/HistoricalPriceChart'
+import { usePortfolioStore } from '@/store/portfolioStore'
+import { useStockData } from '@/hooks/useStockData'
+import { RefreshCw, Loader2 } from 'lucide-react'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const holdings = usePortfolioStore((s) => s.holdings)
+  const isFetchingData = usePortfolioStore((s) => s.isFetchingData)
+  const error = usePortfolioStore((s) => s.error)
+  const simulationResult = usePortfolioStore((s) => s.simulationResult)
+  const { fetchAllAndCalcStats } = useStockData()
+
+  // 銘柄が変更されたら統計量を再計算
+  useEffect(() => {
+    if (holdings.length > 0) {
+      fetchAllAndCalcStats()
+    }
+  }, [holdings.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="min-h-screen bg-background">
+      {/* ヘッダー */}
+      <header className="border-b bg-card">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+          <h1 className="text-xl font-bold tracking-tight">
+            Portfolio Vision
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            株式ポートフォリオ モンテカルロシミュレーター
+          </p>
+        </div>
+      </header>
+
+      {/* メインコンテンツ */}
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+          {/* 左パネル：銘柄入力・設定 */}
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">銘柄登録</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <StockInputForm />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base">保有銘柄一覧</CardTitle>
+                {holdings.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchAllAndCalcStats(true)}
+                    disabled={isFetchingData}
+                  >
+                    {isFetchingData ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    データ更新
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                <HoldingsTable />
+              </CardContent>
+            </Card>
+
+            {holdings.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">シミュレーション設定</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <SimulationSettings />
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* 右パネル：結果表示 */}
+          <div className="space-y-6">
+            {error && (
+              <Card className="border-destructive">
+                <CardContent className="p-4 text-sm text-destructive">
+                  {error}
+                </CardContent>
+              </Card>
+            )}
+
+            <PortfolioSummary />
+
+            {simulationResult && (
+              <>
+                <SimulationSummary />
+                <div className="grid gap-6 xl:grid-cols-2">
+                  <ValueDistributionChart />
+                  <ValueProjectionChart />
+                </div>
+                <PrincipalLossChart />
+              </>
+            )}
+
+            <HistoricalPriceChart />
+
+            {holdings.length === 0 && (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
+                <p className="text-lg font-medium text-muted-foreground">
+                  銘柄を登録してください
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  左のパネルから証券コードを入力して銘柄を追加すると、
+                  <br />
+                  ポートフォリオの分析結果がここに表示されます。
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* フッター */}
+      <footer className="border-t bg-card">
+        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
+          <Separator className="mb-4" />
+          <p className="text-xs text-muted-foreground">
+            ※ 本ツールの計算結果はあくまで参考値であり、将来の株価・運用成果を保証するものではありません。投資判断はご自身の責任で行ってください。
+          </p>
+        </div>
+      </footer>
+    </div>
   )
 }
 
