@@ -78,7 +78,7 @@ export function ValueProjectionChart() {
               type="monotone"
               dataKey="band_10_25"
               stackId="1"
-              fill="hsl(var(--chart-1))"
+              fill="var(--chart-1)"
               fillOpacity={0.15}
               stroke="none"
             />
@@ -86,7 +86,7 @@ export function ValueProjectionChart() {
               type="monotone"
               dataKey="band_25_50"
               stackId="1"
-              fill="hsl(var(--chart-1))"
+              fill="var(--chart-1)"
               fillOpacity={0.3}
               stroke="none"
             />
@@ -94,7 +94,7 @@ export function ValueProjectionChart() {
               type="monotone"
               dataKey="band_50_75"
               stackId="1"
-              fill="hsl(var(--chart-1))"
+              fill="var(--chart-1)"
               fillOpacity={0.3}
               stroke="none"
             />
@@ -102,7 +102,7 @@ export function ValueProjectionChart() {
               type="monotone"
               dataKey="band_75_90"
               stackId="1"
-              fill="hsl(var(--chart-1))"
+              fill="var(--chart-1)"
               fillOpacity={0.15}
               stroke="none"
             />
@@ -111,29 +111,29 @@ export function ValueProjectionChart() {
               type="monotone"
               dataKey="p50"
               fill="none"
-              stroke="hsl(var(--chart-1))"
+              stroke="var(--chart-1)"
               strokeWidth={2}
             />
             {/* 元本ライン */}
             <ReferenceLine
               y={costManYen}
-              stroke="hsl(var(--destructive))"
+              stroke="var(--destructive)"
               strokeDasharray="5 5"
-              label={{ value: `元本 ${costManYen}万円`, fill: 'hsl(var(--destructive))', fontSize: 11, position: 'right' }}
+              label={{ value: `元本 ${costManYen}万円`, fill: 'var(--destructive)', fontSize: 11, position: 'right' }}
             />
           </AreaChart>
         </ResponsiveContainer>
         <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-4 rounded bg-[hsl(var(--chart-1))]/30" />
+            <span className="inline-block h-2 w-4 rounded bg-(--chart-1)/30" />
             25-75%ile
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block h-2 w-4 rounded bg-[hsl(var(--chart-1))]/15" />
+            <span className="inline-block h-2 w-4 rounded bg-(--chart-1)/15" />
             10-90%ile
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block h-0.5 w-4 bg-[hsl(var(--chart-1))]" />
+            <span className="inline-block h-0.5 w-4 bg-chart-1" />
             中央値
           </span>
         </div>

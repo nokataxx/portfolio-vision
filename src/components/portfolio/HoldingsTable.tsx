@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import {
   Table,
   TableBody,
@@ -7,17 +8,89 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { usePortfolioStore } from '@/store/portfolioStore'
 import { Trash2 } from 'lucide-react'
 
-function formatCurrency(value: number): string {
-  return value.toLocaleString('ja-JP', { maximumFractionDigits: 0 })
+function fractionDigits(value: number): number {
+  const s = String(value)
+  const dotIndex = s.indexOf('.')
+  return dotIndex === -1 ? 0 : s.length - dotIndex - 1
+}
+
+function formatCurrency(value: number, decimals?: number): string {
+  const d = decimals ?? fractionDigits(value)
+  return value.toLocaleString('ja-JP', {
+    minimumFractionDigits: d,
+    maximumFractionDigits: d,
+  })
+}
+
+function EditableCell({
+  value,
+  onSave,
+  format,
+  className,
+}: {
+  value: number
+  onSave: (value: number) => void
+  format: (v: number) => string
+  className?: string
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
+  }, [editing])
+
+  const commit = () => {
+    const parsed = Number(draft)
+    if (!isNaN(parsed) && parsed > 0) {
+      onSave(parsed)
+    }
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <Input
+        ref={inputRef}
+        type="number"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit()
+          if (e.key === 'Escape') setEditing(false)
+        }}
+        className="h-7 w-24 text-right text-sm"
+      />
+    )
+  }
+
+  return (
+    <span
+      className={`cursor-pointer rounded px-1 hover:bg-muted ${className ?? ''}`}
+      onClick={() => {
+        setDraft(String(value))
+        setEditing(true)
+      }}
+    >
+      {format(value)}
+    </span>
+  )
 }
 
 export function HoldingsTable() {
   const holdings = usePortfolioStore((s) => s.holdings)
   const portfolioStatistics = usePortfolioStore((s) => s.portfolioStatistics)
   const removeHolding = usePortfolioStore((s) => s.removeHolding)
+  const updateHolding = usePortfolioStore((s) => s.updateHolding)
 
   if (holdings.length === 0) {
     return (
@@ -57,8 +130,20 @@ export function HoldingsTable() {
               <TableRow key={h.id}>
                 <TableCell className="font-mono">{h.code}</TableCell>
                 <TableCell className="max-w-[120px] truncate">{h.name}</TableCell>
-                <TableCell className="text-right">{h.shares.toLocaleString()}</TableCell>
-                <TableCell className="text-right">¥{formatCurrency(h.acquisitionPrice)}</TableCell>
+                <TableCell className="text-right">
+                  <EditableCell
+                    value={h.shares}
+                    onSave={(v) => updateHolding(h.id, { shares: v })}
+                    format={(v) => v.toLocaleString()}
+                  />
+                </TableCell>
+                <TableCell className="text-right">
+                  <EditableCell
+                    value={h.acquisitionPrice}
+                    onSave={(v) => updateHolding(h.id, { acquisitionPrice: v })}
+                    format={(v) => `¥${formatCurrency(v)}`}
+                  />
+                </TableCell>
                 <TableCell className="text-right">
                   {currentPrice > 0 ? `¥${formatCurrency(currentPrice)}` : '—'}
                 </TableCell>

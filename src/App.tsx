@@ -58,30 +58,6 @@ function App() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-base">保有銘柄一覧</CardTitle>
-                {holdings.length > 0 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fetchAllAndCalcStats(true)}
-                    disabled={isFetchingData}
-                  >
-                    {isFetchingData ? (
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                    )}
-                    データ更新
-                  </Button>
-                )}
-              </CardHeader>
-              <CardContent>
-                <HoldingsTable />
-              </CardContent>
-            </Card>
-
             {holdings.length > 0 && (
               <Card>
                 <CardHeader>
@@ -104,7 +80,30 @@ function App() {
               </Card>
             )}
 
-            <PortfolioSummary />
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base">保有銘柄一覧</CardTitle>
+                {holdings.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchAllAndCalcStats(true)}
+                    disabled={isFetchingData}
+                  >
+                    {isFetchingData ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    データ更新
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                <HoldingsTable />
+                <PortfolioSummary />
+              </CardContent>
+            </Card>
 
             {simulationResult && (
               <>

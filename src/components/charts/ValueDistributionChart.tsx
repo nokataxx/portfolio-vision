@@ -72,12 +72,12 @@ export function ValueDistributionChart() {
               formatter={(value) => [`${value}回`, '頻度']}
               labelFormatter={(label) => `${label}万円`}
             />
-            <Bar dataKey="count" fill="hsl(var(--chart-1))" />
+            <Bar dataKey="count" fill="var(--chart-1))" />
             <ReferenceLine
               x={data.findIndex((d) => d.range / 10000 >= costLine)?.toString()}
-              stroke="hsl(var(--destructive))"
+              stroke="var(--destructive)"
               strokeDasharray="5 5"
-              label={{ value: '元本', fill: 'hsl(var(--destructive))', fontSize: 11 }}
+              label={{ value: '元本', fill: 'var(--destructive)', fontSize: 11 }}
             />
           </BarChart>
         </ResponsiveContainer>

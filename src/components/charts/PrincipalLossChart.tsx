@@ -46,7 +46,7 @@ export function PrincipalLossChart() {
             <Line
               type="monotone"
               dataKey="probability"
-              stroke="hsl(var(--chart-2))"
+              stroke="var(--chart-2)"
               strokeWidth={2}
               dot={{ r: 3 }}
             />

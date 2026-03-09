@@ -13,11 +13,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { usePortfolioStore } from '@/store/portfolioStore'
 
 const COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
   '#8884d8',
   '#82ca9d',
   '#ffc658',
@@ -88,8 +88,11 @@ export function HistoricalPriceChart() {
                 const holding = holdings.find((h) => h.code === String(name))
                 return [`${Number(value).toFixed(1)}`, `${name} ${holding?.name ?? ''}`]
               }}
+              contentStyle={{ fontSize: 11 }}
+              labelStyle={{ fontSize: 11 }}
             />
             <Legend
+              wrapperStyle={{ fontSize: 11 }}
               formatter={(value) => {
                 const holding = holdings.find((h) => h.code === value)
                 return `${value} ${holding?.name ?? ''}`
